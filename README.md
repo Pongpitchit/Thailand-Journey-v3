@@ -18,7 +18,7 @@
 
 ## 📸 ตัวอย่างภาพ
 
-![ตัวอย่างหน้าเว็บไซต์](thailand-journey-v3.vercel.app)
+![ตัวอย่างหน้าเว็บไซต์](http://thailand-journey-v3.vercel.app)
 
 ## 🚀 การติดตั้งและใช้งาน
 
