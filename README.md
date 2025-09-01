@@ -1,30 +1,28 @@
-# Fork of Travel to Tibet v2
+# Thailand-Journey
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+เว็บไซต์ Mockup สำหรับ **คู่มือการเดินทางไปทิเบต** จากประเทศไทย โดยใช้เทคโนโลยี AI 
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/pongpitchits66-2880s-projects/v0-fork-of-travel-to-tibet-v2)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/3LYnFKxK26o)
+## 📌 รายละเอียดโปรเจกต์
 
-## Overview
+- **ชื่อโปรเจกต์**: Thailand-Journey
+- **ประเภท**: เว็บไซต์ Mockup
+- **วัตถุประสงค์**: สร้างเว็บไซต์เพื่อแนะนำการเดินทางไปทิเบตจากประเทศไทย โดยใช้เทคโนโลยี AI รุ่นที่ 0
+- **เทคโนโลยีที่ใช้**: HTML, CSS, JavaScript
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## 🔧 ฟีเจอร์หลัก
 
-## Deployment
+- หน้าแรกที่แสดงข้อมูลเบื้องต้นเกี่ยวกับการเดินทาง
+- ส่วนของแกลเลอรีภาพถ่ายจากทิเบต
+- ระบบแนะนำสถานที่ท่องเที่ยว
+- แบบฟอร์มติดต่อสอบถาม
 
-Your project is live at:
+## 📸 ตัวอย่างภาพ
 
-**[https://vercel.com/pongpitchits66-2880s-projects/v0-fork-of-travel-to-tibet-v2](https://vercel.com/pongpitchits66-2880s-projects/v0-fork-of-travel-to-tibet-v2)**
+![ตัวอย่างหน้าเว็บไซต์](thailand-journey-v3.vercel.app)
 
-## Build your app
+## 🚀 การติดตั้งและใช้งาน
 
-Continue building your app on:
+1. Clone repository นี้:
 
-**[https://v0.app/chat/projects/3LYnFKxK26o](https://v0.app/chat/projects/3LYnFKxK26o)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+   ```bash
+   git clone https://github.com/Pongpitchit/Thailand-Journey.git
