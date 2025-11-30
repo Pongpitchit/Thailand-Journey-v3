@@ -16,10 +16,6 @@ interface MapPoint {
   googleMapsUrl: string
 }
 
-interface MapboxMapProps {
-  accessToken: string
-}
-
 const mapPoints: MapPoint[] = [
   {
     name: "กรุงเทพฯ",
@@ -83,55 +79,52 @@ const mapPoints: MapPoint[] = [
   },
 ]
 
-// ✅ SVG icon สำหรับ marker
+// Icon SVG
 const getIconSymbol = (type: string) => {
   switch (type) {
     case "start":
-      return `<img src="https://www.svgrepo.com/show/476832/airplane-take-off.svg" width="18" height="18" />` // เมือง
+      return `<img src="https://www.svgrepo.com/show/476832/airplane-take-off.svg" width="18" height="18" />`
     case "destination":
-      return `<img src="https://www.svgrepo.com/show/420536/architecture-landscape.svg" width="18" height="18" />` // ภูเขา
+      return `<img src="https://www.svgrepo.com/show/420536/architecture-landscape.svg" width="18" height="18" />`
     case "transit":
-      return `<img src="https://www.svgrepo.com/show/476803/tram.svg" width="18" height="18" />` // รถไฟ
+      return `<img src="https://www.svgrepo.com/show/476803/tram.svg" width="18" height="18" />`
     case "attraction":
-      return `<img src="https://www.svgrepo.com/show/476890/map-marker.svg" width="18" height="18" />` // landmark
-    case "attraction1":
-      return `<img src="https://www.svgrepo.com/show/500063/garden.svg" width="18" height="18" />` // garden
+      return `<img src="https://www.svgrepo.com/show/476890/map-marker.svg" width="18" height="18" />`
     default:
-      return `<img src="https://www.svgrepo.com/show/530630/emu.svg" width="18" height="18" />` // default
+      return `<img src="https://www.svgrepo.com/show/530630/emu.svg" width="18" height="18" />`
   }
 }
 
-export default function MapboxMap({ accessToken }: MapboxMapProps) {
+export default function MapboxMap() {
+  const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
+  const [mapboxgl, setMapboxgl] = useState<any>(null)
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null)
   const [isJourneyMode, setIsJourneyMode] = useState(false)
   const [currentJourneyStep, setCurrentJourneyStep] = useState(0)
-  const [mapboxgl, setMapboxgl] = useState<any>(null)
 
   // โหลด Mapbox
   useEffect(() => {
-    const loadMapbox = async () => {
+    const load = async () => {
       if (typeof window !== "undefined" && accessToken) {
         const mapboxgl = await import("mapbox-gl")
         await import("mapbox-gl/dist/mapbox-gl.css")
-
         mapboxgl.default.accessToken = accessToken
-
         setMapboxgl(mapboxgl.default)
       }
     }
-    loadMapbox()
+    load()
   }, [accessToken])
 
-  // สร้างแผนที่
+  // สร้าง map
   useEffect(() => {
     if (!mapboxgl || !mapContainer.current || map.current) return
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/satellite-streets-v12",
-      center: [96.0, 22.0],
+      center: [96, 22],
       zoom: 5,
       projection: "globe",
     })
@@ -151,75 +144,44 @@ export default function MapboxMap({ accessToken }: MapboxMapProps) {
         id: "route",
         type: "line",
         source: "route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#ff6b35", "line-width": 4, "line-opacity": 0.8, "line-dasharray": [2, 2] },
+        paint: {
+          "line-color": "#ff6b35",
+          "line-width": 4,
+          "line-opacity": 0.8,
+          "line-dasharray": [2, 2],
+        },
       })
 
-      // ✅ Marker + Icon SVG
+      // Markers
       mapPoints.forEach((point) => {
-        const markerElement = document.createElement("div")
-        markerElement.className = "custom-marker"
-        markerElement.style.cssText = `
+        const markerEl = document.createElement("div")
+        markerEl.style.cssText = `
           background-color: ${point.color};
-          width: 40px;
-          height: 40px;
+          width: 40px; height: 40px;
           border-radius: 50%;
           border: 3px solid white;
+          display: flex; align-items: center; justify-content: center;
           box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
           cursor: pointer;
         `
-        markerElement.innerHTML = getIconSymbol(point.type)
+        markerEl.innerHTML = getIconSymbol(point.type)
+        markerEl.addEventListener("click", () => setSelectedPoint(point))
 
-        markerElement.addEventListener("click", () => setSelectedPoint(point))
-
-        new mapboxgl.Marker(markerElement).setLngLat(point.coordinates).addTo(map.current)
-      })
-
-      // เอฟเฟกต์ 3D
-      map.current.setFog({
-        color: "rgb(186, 210, 235)",
-        "high-color": "rgb(36, 92, 223)",
-        "horizon-blend": 0.02,
-        "space-color": "rgb(11, 11, 25)",
-        "star-intensity": 0.6,
+        new mapboxgl.Marker(markerEl).setLngLat(point.coordinates).addTo(map.current)
       })
     })
 
     return () => map.current?.remove()
   }, [mapboxgl])
 
-  // Journey animation
-  useEffect(() => {
-    if (!map.current || !isJourneyMode) return
-    if (currentJourneyStep < mapPoints.length) {
-      const point = mapPoints[currentJourneyStep]
-      map.current.flyTo({ center: point.coordinates, zoom: 12, duration: 2000, essential: true })
-      const timer = setTimeout(() => {
-        if (currentJourneyStep < mapPoints.length - 1) {
-          setCurrentJourneyStep((s) => s + 1)
-        } else {
-          setIsJourneyMode(false)
-          setCurrentJourneyStep(0)
-        }
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [isJourneyMode, currentJourneyStep])
-
   const startJourney = useCallback(() => {
     setIsJourneyMode(true)
-    setCurrentJourneyStep(0)
     setSelectedPoint(null)
+    setCurrentJourneyStep(0)
   }, [])
 
   const resetView = useCallback(() => {
     if (!map.current) return
-    setIsJourneyMode(false)
-    setCurrentJourneyStep(0)
-    setSelectedPoint(null)
     const bounds = new mapboxgl.LngLatBounds()
     mapPoints.forEach((p) => bounds.extend(p.coordinates))
     map.current.fitBounds(bounds, { padding: 50, duration: 1000 })
@@ -227,24 +189,8 @@ export default function MapboxMap({ accessToken }: MapboxMapProps) {
 
   if (!accessToken) {
     return (
-      <div className="w-full h-[600px] rounded-xl border flex items-center justify-center bg-muted">
-        <div className="text-center">
-          <p className="text-muted-foreground">ไม่พบ Mapbox Access Token</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            กรุณาตั้งค่า NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ใน Project Settings
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!mapboxgl) {
-    return (
-      <div className="w-full h-[600px] rounded-xl border flex items-center justify-center bg-muted">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">กำลังโหลดแผนที่ Mapbox...</p>
-        </div>
+      <div className="w-full h-[600px] flex items-center justify-center border rounded-xl">
+        ❌ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ไม่ถูกตั้งค่า
       </div>
     )
   }
@@ -252,104 +198,13 @@ export default function MapboxMap({ accessToken }: MapboxMapProps) {
   return (
     <div className="w-full space-y-6">
       <div className="relative">
-        <div ref={mapContainer} className="w-full h-[600px] rounded-xl border overflow-hidden" />
+        <div ref={mapContainer} className="w-full h-[600px] border rounded-xl" />
 
-        {/* ปุ่มควบคุม */}
         <div className="absolute top-4 right-4 space-y-2">
-          <Button
-            onClick={startJourney}
-            className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg"
-            disabled={isJourneyMode}
-          >
-            {isJourneyMode ? "กำลังเดินทาง..." : "🚂 เริ่มการเดินทาง"}
-          </Button>
-          <Button onClick={resetView} variant="secondary" size="sm" className="bg-white/90 hover:bg-white shadow-lg">
-            🔄 รีเซ็ตมุมมอง
-          </Button>
-        </div>
-
-        {/* Progress เดินทาง */}
-        {isJourneyMode && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 rounded-full px-6 py-3 shadow-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium">
-                {mapPoints[currentJourneyStep]?.name} ({currentJourneyStep + 1}/{mapPoints.length})
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-gray-200/80 p-4 rounded-xl shadow-lg backdrop-blur-sm text-black-200">
-          <h4 className="font-semibold mb-3 text-sm">🗺️ เส้นทางการเดินทาง</h4>
-          <div className="space-y-2 text-xs">
-            {mapPoints.map((point, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full text-black-200 " style={{ backgroundColor: point.color }}></div>
-                <span>{point.name}</span>
-              </div>
-            ))}
-          </div>
+          <Button onClick={startJourney}>🚂 เริ่มการเดินทาง</Button>
+          <Button variant="secondary" onClick={resetView}>🔄 รีเซ็ต</Button>
         </div>
       </div>
-
-      {/* ข้อมูลจุดที่เลือก */}
-      {selectedPoint && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>
-                {selectedPoint.name} ({selectedPoint.nameEn})
-              </span>
-              <Badge
-                variant={
-                  selectedPoint.type === "start"
-                    ? "default"
-                    : selectedPoint.type === "destination"
-                      ? "destructive"
-                      : selectedPoint.type === "transit"
-                        ? "secondary"
-                        : "outline"
-                }
-              >
-                {selectedPoint.type === "start"
-                  ? "จุดเริ่มต้น"
-                  : selectedPoint.type === "destination"
-                    ? "จุดหมาย"
-                    : selectedPoint.type === "transit"
-                      ? "จุดเชื่อมต่อ"
-                      : "สถานที่ท่องเที่ยว"}
-              </Badge>
-            </CardTitle>
-            <CardDescription>{selectedPoint.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">ความสูง:</span>
-                <p className="font-semibold">{selectedPoint.elevation.toLocaleString()} เมตร</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">พิกัด:</span>
-                <p className="font-semibold">
-                  {selectedPoint.coordinates[1].toFixed(4)}, {selectedPoint.coordinates[0].toFixed(4)}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(selectedPoint.googleMapsUrl, "_blank")}
-                className="w-full"
-              >
-                ดูใน Google Maps
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
